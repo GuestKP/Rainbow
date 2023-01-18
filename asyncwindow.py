@@ -1,4 +1,5 @@
 from threading import Thread
+import _thread
 import os
 import pygame
 from typing import Callable, Any
@@ -19,7 +20,7 @@ class AsyncWindow:
 
     def __init__(self, width: int, height: int, draw_window: Callable[[pygame.Surface, int, int], Any],
                  event_callback: Callable[[pygame.event.Event], bool], keys_update: Callable[[list[int]], bool],
-                 is_resizable: bool = False) -> None:
+                 is_resizable: bool = True) -> None:
         """
         Main constructor for AsyncWindow. To run defined window, call AsyncWindow.run().
         :param width: default width of window in pixels
@@ -31,8 +32,9 @@ class AsyncWindow:
                     Should return *True* if window must continue execution; *False* otherwise
         :param is_resizable: flag: can user resize window
         """
-        self.pygame_thread = Thread(target=self.pygame_thread_main,
-                                    args=[width, height, is_resizable])
+        _thread.start_new_thread(self.pygame_thread_main, tuple([width, height, is_resizable]))
+        # self.pygame_thread = Thread(target=self.pygame_thread_main,
+        #                             args=[width, height, is_resizable])
         self.event_callback = event_callback
         self.keys_update = keys_update
         self.draw_window = draw_window
@@ -43,12 +45,18 @@ class AsyncWindow:
         """
         self.pygame_thread.run()
 
+    def stop(self) -> None:
+        """
+        Stops window with options defined by constructor of this class.
+        """
+        # self.
+
     def pygame_thread_main(self, width, height, is_resizable) -> None:
         """
         Main function for window thread. Executes callbacks, checks event and other things related to window.\n
         Should **NOT** be called manually.
         """
-        import pygame
+        # import pygame
 
         self.init_vars(width, height, is_resizable)
 
@@ -67,7 +75,8 @@ class AsyncWindow:
             pygame.display.update()
             pygame.display.flip()
 
-        exit()  # closes thread
+        pygame.display.quit()
+        # exit()  # closes thread
 
     def init_vars(self, width: int, height: int, is_resizable: bool) -> None:
         """
